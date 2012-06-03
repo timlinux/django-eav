@@ -46,9 +46,9 @@ from django.conf import settings
 
 from .validators import *
 from .fields import EavSlugField, EavDatatypeField
+import caching.base
 
-
-class EnumValue(models.Model):
+class EnumValue(caching.base.CachingMixin, models.Model):
     '''
     *EnumValue* objects are the value 'choices' to multiple choice
     *TYPE_ENUM* :class:`Attribute` objects.
@@ -79,11 +79,13 @@ class EnumValue(models.Model):
     value = models.CharField(_(u"value"), db_index=True,
                              unique=True, max_length=50)
 
+    objects = caching.base.CachingManager()
+
     def __unicode__(self):
         return self.value
 
 
-class EnumGroup(models.Model):
+class EnumGroup(caching.base.CachingMixin, models.Model):
     '''
     *EnumGroup* objects have two fields- a *name* ``CharField`` and *enums*,
     a ``ManyToManyField`` to :class:`EnumValue`. :class:`Attribute` classes
@@ -96,11 +98,13 @@ class EnumGroup(models.Model):
 
     enums = models.ManyToManyField(EnumValue, verbose_name=_(u"enum group"))
 
+    objects = caching.base.CachingManager()
+
     def __unicode__(self):
         return self.name
 
 
-class Attribute(models.Model):
+class Attribute(caching.base.CachingMixin, models.Model):
     '''
     Putting the **A** in *EAV*. This holds the attributes, or concepts.
     Examples of possible *Attributes*: color, height, weight,
@@ -204,7 +208,8 @@ class Attribute(models.Model):
 
     required = models.BooleanField(_(u"required"), default=False)
 
-    objects = models.Manager()
+    #objects = models.Manager()
+    objects = caching.base.CachingManager()
     on_site = CurrentSiteManager()
 
     def get_validators(self):
@@ -314,7 +319,7 @@ class Attribute(models.Model):
         return u"%s (%s)" % (self.name, self.get_datatype_display())
 
 
-class Value(models.Model):
+class Value(caching.base.CachingMixin, models.Model):
     '''
     Putting the **V** in *EAV*. This model stores the value for one particular
     :class:`Attribute` for some entity.
@@ -358,6 +363,8 @@ class Value(models.Model):
 
     attribute = models.ForeignKey(Attribute, db_index=True,
                                   verbose_name=_(u"attribute"))
+
+    objects = caching.base.CachingManager()
 
     def save(self, *args, **kwargs):
         '''
